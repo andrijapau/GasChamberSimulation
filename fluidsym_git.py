@@ -30,17 +30,17 @@ def equation_of_motion(u, v, dt, dx, dy, nu):
                         nu * dt / dy **2 *
                         (un[2:, 1:-1] - 2 * un[1:-1, 1:-1] + un[0:-2,1:-1]))
 
-        v[1:-1, 1:-1] = (vn[1:-1, 1:-1] -
-                        dt/dx * un[1:-1, 1:-1] *
-                        (vn[1:-1, 1:-1] - vn[1:-1,0:-2]) -
-                        dt / dy * vn[1:-1, 1:-1] *
-                        (vn[1:-1, 1:-1] - vn[0:-2, 1:-1]) +
-                        nu * dt / dx**2 *
-                        (vn[1:-1, 2:] - 2 * vn[1:-1, 1:-1] + vn[1:-1, 0:-2]) +
-                        nu * dt / dy **2 *
-                        (vn[2:, 1:-1] - 2 * vn[1:-1, 1:-1] + vn[0:-2,1:-1]))
+    v[1:-1, 1:-1] = (vn[1:-1, 1:-1] -
+                    dt/dx * un[1:-1, 1:-1] *
+                    (vn[1:-1, 1:-1] - vn[1:-1,0:-2]) -
+                    dt / dy * vn[1:-1, 1:-1] *
+                    (vn[1:-1, 1:-1] - vn[0:-2, 1:-1]) +
+                    nu * dt / dx**2 *
+                    (vn[1:-1, 2:] - 2 * vn[1:-1, 1:-1] + vn[1:-1, 0:-2]) +
+                    nu * dt / dy **2 *
+                    (vn[2:, 1:-1] - 2 * vn[1:-1, 1:-1] + vn[0:-2,1:-1]))
 
-        return (u,v)
+    return (u,v)
 
 def boundary(u, v, nozzle_u, nozzle_v, nx, ny, t_step):
    u[0,:] = 0
@@ -59,24 +59,26 @@ def boundary(u, v, nozzle_u, nozzle_v, nx, ny, t_step):
 
    return (u,v)
 
+nt = 2510
+f = None
+
+initial_u = numpy.zeros((nx,ny))
+initial_v = numpy.zeros((ny,ny))
+nozzle_u = numpy.append(10*numpy.ones(1000), numpy.zeros(nt))
+nozzle_v = numpy.append(10*numpy.ones(1000), numpy.zeros(nt))
+
 def simulate(f,u,v,dt,dx,dy,nu,steps, nozzle_u, nozzle_v, nx, ny):
-   for i in range(steps):
-      (u,v) = equation_of_motion(u, v, dt, dx, dy, nu)
-      (u,v) = boundary(u, v, nozzle_u, nozzle_v, nx, ny, i)
+    for i in range(steps):
+        (u,v) = equation_of_motion(u, v, dt, dx, dy, nu)
+        (u,v) = boundary(u, v, nozzle_u, nozzle_v, nx, ny, i)
+        ax = pyplot.figure()
+        norm = Normalize()
+        magnitude = numpy.sqrt(u[::2]**2 + v[::2]**2)
+        pyplot.quiver(u,v, norm(magnitude), scale = 60, cmap = pyplot.cm.jet)
+        ax.savefig('frame'.zfill(5)+str(i)+'.png', dpi=300)
+        ax.clear()
 
-      nt = 2510
-      f = None
-      initial_u = numpy.zeros((nx,ny))
-      initial_v = numpy.zeros((ny,ny))
-      nozzle_u = numpy.append(10*numpy.ones(1000), numpy.zeros(nt))
-      nozzle_v = numpy.append(10*numpy.ones(1000), numpy.zeros(nt))
 
-(final_u, final_v) = simulate(f,initial_u,initial_v,dt,dx,dy,nu,nt, nozzle_u, nozzle_v, nx, ny)
 
-ax = pyplot.figure()
-norm = Normalize()
-magnitude = numpy.sqrt(u[::2]**2 + v[::2]**2)
-pyplot.quiver(final_u[::2], final_v[::2], norm(magnitude), scale = 60, cmap = pyplot.cm.jet)
-ax.savefig('frame'+str('last').zfill(5)+'.png', dpi=300)
-ax.clear()
+simulate(f,initial_u,initial_v,dt,dx,dy,nu,nt, nozzle_u, nozzle_v, nx, ny)
 pyplot.close()
